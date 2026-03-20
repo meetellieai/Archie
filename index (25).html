@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Archie — Day 1 Lesson</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:#020810;color:#E8F2FF;font-family:'Inter',sans-serif;overflow:hidden;}
+.stars{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;}
+.star{position:absolute;border-radius:50%;background:white;}
+@keyframes twinkle{0%,100%{opacity:0.1}50%{opacity:0.9}}
+.page{position:relative;z-index:1;width:100%;height:100vh;display:flex;align-items:center;justify-content:center;}
+.phone{width:390px;height:780px;background:#0d1117;border-radius:50px;padding:14px;box-shadow:0 0 0 1px #1e3a5f,0 0 60px rgba(74,144,226,0.15),0 30px 80px rgba(0,0,0,0.9);flex-shrink:0;}
+.phone-notch{width:100px;height:24px;background:#0d1117;border-radius:0 0 16px 16px;margin:0 auto;position:relative;z-index:2;}
+.phone-inner{width:100%;height:714px;background:#000;border-radius:38px;overflow:hidden;position:relative;}
+
+/* Screens */
+.screen{display:none;position:absolute;top:0;left:0;width:100%;height:100%;flex-direction:column;align-items:center;padding:1.5rem;overflow-y:auto;z-index:1;}
+.screen.active{display:flex;z-index:2;}
+
+/* Top bar */
+.top-bar{width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-shrink:0;}
+.day-badge{font-family:'Orbitron',monospace;font-size:10px;font-weight:500;color:#4A90E2;letter-spacing:2px;text-transform:uppercase;background:#0d1f3c;border:1px solid #1E40AF;padding:4px 12px;border-radius:20px;}
+.mini-bar-wrap{width:80px;height:4px;background:#0A1628;border-radius:2px;overflow:hidden;}
+.mini-bar{height:100%;background:linear-gradient(90deg,#1E40AF,#4A90E2);border-radius:2px;transition:width 1s ease;width:0%;}
+
+/* Content areas */
+.lesson-icon{font-size:40px;margin:1.5rem 0 1rem;flex-shrink:0;}
+.lesson-title{font-family:'Orbitron',monospace;font-size:17px;font-weight:700;color:#E8F2FF;text-align:center;line-height:1.5;margin-bottom:0.5rem;}
+.lesson-sub{font-size:14px;color:#7BB3F0;text-align:center;line-height:1.8;margin-bottom:1.5rem;max-width:300px;}
+.lesson-text{font-size:14px;color:#c0d0e8;text-align:center;line-height:1.9;margin-bottom:1.25rem;max-width:300px;}
+
+/* Prompt box */
+.prompt-box{
+  background:#0A1628;
+  border:1px solid #4A90E2;
+  border-radius:14px;
+  padding:1.25rem;
+  width:100%;
+  margin-bottom:1.25rem;
+  position:relative;
+}
+.prompt-label{font-size:9px;color:#4A90E2;letter-spacing:2px;text-transform:uppercase;margin-bottom:0.75rem;font-weight:600;}
+.prompt-text{font-size:14px;color:#E8F2FF;line-height:1.8;font-style:italic;}
+
+/* Buttons */
+.btn{
+  padding:14px 24px;border-radius:30px;border:none;
+  font-size:14px;font-weight:600;cursor:pointer;
+  transition:all 0.2s;font-family:'Inter',sans-serif;
+  width:100%;margin-bottom:10px;letter-spacing:0.5px;
+}
+.btn:active{transform:scale(0.97);}
+.btn-primary{background:#4A90E2;color:white;}
+.btn-primary:hover{background:#5a9ff2;}
+.btn-glow{box-shadow:0 0 20px rgba(74,144,226,0.4);}
+.btn-secondary{background:#0d1f3c;color:#93C5FD;border:1px solid #1E40AF;}
+.btn-secondary:hover{border-color:#4A90E2;color:#DBEAFE;}
+.btn-ghost{background:transparent;color:#4A90E2;border:1px solid #4A90E2;font-size:13px;}
+
+.text-link{
+  font-size:11px;color:#3a6a9a;cursor:pointer;
+  letter-spacing:0.5px;transition:color 0.3s;
+  margin-top:4px;text-align:center;
+}
+.text-link:hover{color:#7BB3F0;}
+
+.spacer{flex:1;}
+.divider{width:60px;height:1px;background:#1E40AF;margin:1rem auto;opacity:0.5;}
+
+/* Reward overlay */
+.reward-overlay{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0);
+  display:none;z-index:10;
+  flex-direction:column;align-items:center;justify-content:flex-start;
+  padding:2rem 2rem 1.5rem;
+  overflow-y:auto;
+  transition:background 0.3s;
+}
+.reward-overlay.active{display:flex;}
+.reward-overlay.dimmed{background:rgba(0,0,0,1);}
+
+.reward-text{
+  font-size:16px;color:#E8F2FF;text-align:center;
+  line-height:2.2;opacity:0;transition:opacity 0.8s;
+  max-width:280px;
+}
+.reward-text.visible{opacity:1;}
+.reward-text .highlight{color:#93C5FD;font-weight:600;}
+.reward-text .big{font-family:'Orbitron',monospace;font-size:18px;font-weight:700;color:#93C5FD;}
+
+/* Archie mini (for reward) */
+.archie-mini{margin-bottom:1.5rem;transition:all 1s;opacity:0;transform:scale(0.8);}
+.archie-mini.visible{opacity:1;transform:scale(1);animation:softBob 4s ease-in-out infinite;}
+
+/* Progress bump */
+.progress-bump{
+  background:#0d1f3c;border:1px solid #1E40AF;border-radius:12px;
+  padding:12px 20px;text-align:center;width:100%;
+  margin:1rem 0;opacity:0;transition:opacity 0.8s;
+}
+.progress-bump.visible{opacity:1;}
+.progress-bump .pct{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;color:#4A90E2;}
+.progress-bump .label{font-size:10px;color:#7BB3F0;letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+.progress-bump .bar-w{width:100%;background:#0A1628;border-radius:3px;height:4px;margin-top:8px;overflow:hidden;}
+.progress-bump .bar-f{height:100%;background:linear-gradient(90deg,#1E40AF,#4A90E2,#93C5FD);border-radius:3px;transition:width 1.5s ease;width:0%;}
+
+/* Copy toast */
+.toast{
+  position:absolute;bottom:100px;left:50%;transform:translateX(-50%);
+  background:#4A90E2;color:white;padding:8px 20px;border-radius:20px;
+  font-size:12px;font-weight:500;opacity:0;transition:opacity 0.3s;
+  z-index:20;pointer-events:none;
+}
+.toast.show{opacity:1;}
+
+/* Guide overlay fade */
+.modal-overlay{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.85);display:none;z-index:15;
+  flex-direction:column;align-items:center;justify-content:center;
+  padding:2rem;opacity:0;transition:opacity 0.2s ease;
+}
+.modal-overlay.active{display:flex;}
+.modal-overlay.visible{opacity:1;}
+@keyframes btnPulse{
+  0%,100%{box-shadow:0 0 20px rgba(74,144,226,0.4);}
+  50%{box-shadow:0 0 45px rgba(74,144,226,1), 0 0 70px rgba(74,144,226,0.5);}
+}
+.btn-pulse{animation:btnPulse 1.5s ease-in-out infinite;}
+.modal-close{font-size:11px;color:#7BB3F0;cursor:pointer;margin-top:1rem;letter-spacing:1px;}
+
+/* Animations */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes softBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes glowPulse{0%,100%{filter:drop-shadow(0 0 8px rgba(74,144,226,0.2))}50%{filter:drop-shadow(0 0 25px rgba(74,144,226,0.6))}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+@keyframes antennaPulse{0%,100%{opacity:0.15}50%{opacity:0.5}}
+@keyframes eyeFlicker{
+  0%{opacity:0}
+  10%{opacity:0.8}
+  20%{opacity:0.1}
+  35%{opacity:0.9}
+  45%{opacity:0.2}
+  60%{opacity:1}
+  100%{opacity:1}
+}
+
+/* Home screen */
+.home-archie{margin:1rem 0;transition:all 1s;animation:softBob 4s ease-in-out infinite;}
+.home-title{font-family:'Orbitron',monospace;font-size:20px;font-weight:700;color:#E8F2FF;text-align:center;line-height:1.5;margin-bottom:0.25rem;}
+.home-sub{font-size:13px;color:#7BB3F0;text-align:center;line-height:1.7;margin-bottom:1.5rem;max-width:280px;}
+.home-progress{
+  background:#0d1f3c;border:1px solid #1E40AF;border-radius:12px;
+  padding:12px 20px;text-align:center;width:100%;
+  margin-bottom:1.5rem;
+}
+.home-progress .pct{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;color:#4A90E2;}
+.home-progress .label{font-size:10px;color:#7BB3F0;letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+.home-progress .bar-w{width:100%;background:#0A1628;border-radius:3px;height:4px;margin-top:8px;overflow:hidden;}
+.home-progress .bar-f{height:100%;background:linear-gradient(90deg,#1E40AF,#4A90E2,#93C5FD);border-radius:3px;transition:width 1.5s ease;}
+@keyframes footPulse{0%{opacity:0.05}50%{opacity:0.3}100%{opacity:0.15}}
+
+/* Cinematic intro */
+.cin-wrap{max-width:320px;width:100%;}
+.cin-big{font-family:'Orbitron',monospace;font-size:24px;font-weight:700;color:#fff;line-height:1.4;margin-bottom:1rem;}
+.cin-normal{font-size:15px;color:#E8F2FF;line-height:1.9;margin-bottom:0.5rem;font-weight:300;}
+.cin-blue{font-size:15px;color:#4A90E2;font-weight:500;margin-bottom:0.5rem;}
+.cin-stat{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;color:#4A90E2;margin:1rem 0 0.3rem;}
+.cin-source{font-size:10px;color:#3a6a9a;letter-spacing:1px;margin-bottom:1rem;font-style:italic;}
+.cin-space{height:1rem;display:block;}
+.cin-line{opacity:0;transition:opacity 2s ease;}
+.cin-line.visible{opacity:1;}
+.next-btn{margin-top:1.5rem;padding:10px 24px;border-radius:20px;border:1px solid #3a6a9a;background:transparent;color:#7BB3F0;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;opacity:0;transition:opacity 1.5s ease;}
+.next-btn:hover{border-color:#4A90E2;color:#93C5FD;}
+.next-btn.visible{opacity:1;}
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+
+<div class="page">
+<div class="phone">
+  <div class="phone-notch"></div>
+  <div class="phone-inner">
+
+    <!-- TOAST -->
+    <div class="toast" id="toast">Copied! ✓</div>
+
+    <!-- ============================================ -->
+    <!-- SPLASH — TAP TO BEGIN -->
+    <!-- ============================================ -->
+    <div class="screen active" id="splash" style="justify-content:center;">
+      <div style="text-align:center;">
+        <div style="font-family:'Orbitron',monospace;font-size:28px;font-weight:700;color:#4A90E2;letter-spacing:4px;margin-bottom:8px;" id="splashTitle">ARCHIE</div>
+        <div style="font-size:11px;color:#7BB3F0;letter-spacing:3px;text-transform:uppercase;margin-bottom:3rem;">The AI Learning Robot</div>
+        <button onclick="startExperience()" style="background:transparent;border:1px solid #3a6a9a;color:#7BB3F0;font-size:13px;letter-spacing:2px;padding:12px 32px;border-radius:30px;cursor:pointer;font-family:'Inter',sans-serif;animation:pulse 2s infinite;">TAP TO BEGIN</button>
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- SCREEN 1 — THE HOOK -->
+    <!-- ============================================ -->
+    <div class="screen" id="sc1" style="justify-content:center;text-align:center;">
+      <div class="cin-wrap" id="sc1content"></div>
+      <button class="next-btn" id="sc1btn" onclick="cinNext('sc2')">Next →</button>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- SCREEN 2 — THE WAKE-UP CALL -->
+    <!-- ============================================ -->
+    <div class="screen" id="sc2" style="justify-content:center;text-align:center;">
+      <div class="cin-wrap" id="sc2content"></div>
+      <button class="next-btn" id="sc2btn" onclick="cinNext('sc3')">Next →</button>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- SCREEN 3 — THE PIVOT -->
+    <!-- ============================================ -->
+    <div class="screen" id="sc3" style="justify-content:center;text-align:center;">
+      <div class="cin-wrap" id="sc3content"></div>
+      <button class="next-btn" id="sc3btn" onclick="cinNext('home')" style="display:none;">Start my AI journey</button>
+    </div>
+
+    <!-- CHATGPT GUIDE OVERLAY -->
+    <div class="modal-overlay" id="chatgptGuide">
+      <div class="prompt-box" style="max-width:320px;text-align:left;">
+        <div class="prompt-label">What to do in ChatGPT</div>
+        <div class="prompt-text" style="font-style:normal;line-height:2.2;">
+          1. <b>Tap</b> the <b style="color:#93C5FD;">"Ask anything"</b> box<br/>
+          2. <b>Tap</b> again, then <b>press</b> <b style="color:#93C5FD;">Paste</b><br/>
+          3. <b>Type</b> your job after <b style="color:#93C5FD;">"My job is:"</b><br/>
+          4. <b>Press</b> the arrow <b style="color:#93C5FD;">⬆️</b>
+        </div>
+        <div style="margin-top:12px;font-size:12px;color:#93C5FD;text-align:center;">You can't mess this up — you're about to use AI ⚡</div>
+      </div>
+      <button class="btn btn-primary btn-glow" style="max-width:320px;margin-top:1rem;" onclick="launchChatGPT()">Open ChatGPT ⚡</button>
+      <div style="font-size:12px;color:#3a6a9a;cursor:pointer;margin-top:1rem;letter-spacing:0.5px;" onclick="dismissGuide()">← Back to Archie</div>
+    </div>
+
+    <!-- BIGGER PROMPT MODAL -->
+    <div class="modal-overlay" id="modal">
+      <div class="prompt-box" style="max-width:320px;">
+        <div class="prompt-label">Your prompt</div>
+        <div class="prompt-text" style="font-size:16px;line-height:2;">"Explain what I do for a living in a way that would make a 10-year-old think it's the coolest job in the world. My job is: ___"</div>
+      </div>
+      <div class="modal-close" onclick="closeModal()">✕ Close</div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- HOME SCREEN — Archie dormant -->
+    <!-- ============================================ -->
+    <div class="screen" id="home">
+      <div class="spacer"></div>
+
+      <!-- Dormant Archie -->
+      <div class="home-archie" id="homeArchie">
+        <svg width="180" height="260" viewBox="0 0 280 400" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="hm_head" cx="35%" cy="28%" r="70%">
+              <stop offset="0%" stop-color="#1e2c42"/><stop offset="100%" stop-color="#0a1220"/>
+            </radialGradient>
+            <linearGradient id="hm_shell" x1="10%" y1="0%" x2="90%" y2="100%">
+              <stop offset="0%" stop-color="#1a2438"/><stop offset="100%" stop-color="#0c1420"/>
+            </linearGradient>
+            <linearGradient id="hm_cyl" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#1a2438"/><stop offset="50%" stop-color="#0f1a2c"/><stop offset="100%" stop-color="#0c1420"/>
+            </linearGradient>
+            <radialGradient id="hm_joint" cx="40%" cy="30%" r="65%">
+              <stop offset="0%" stop-color="#1a2438"/><stop offset="100%" stop-color="#0c1420"/>
+            </radialGradient>
+            <filter id="hmGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="hmEyeGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <ellipse cx="140" cy="365" rx="60" ry="8" fill="#1a2438" opacity="0.15"/>
+          <!-- Legs -->
+          <rect x="90" y="258" width="36" height="50" rx="14" fill="url(#hm_cyl)" stroke="#1a2438" stroke-width="0.8"/>
+          <rect x="154" y="258" width="36" height="50" rx="14" fill="url(#hm_cyl)" stroke="#1a2438" stroke-width="0.8"/>
+          <rect x="82" y="300" width="48" height="34" rx="14" fill="url(#hm_cyl)" stroke="#1a2438" stroke-width="0.8"/>
+          <rect x="150" y="300" width="48" height="34" rx="14" fill="url(#hm_cyl)" stroke="#1a2438" stroke-width="0.8"/>
+          <rect x="76" y="330" width="60" height="14" rx="7" fill="url(#hm_cyl)" stroke="#1a2438" stroke-width="0.8"/>
+          <rect x="144" y="330" width="60" height="14" rx="7" fill="url(#hm_cyl)" stroke="#1a2438" stroke-width="0.8"/>
+          <!-- Torso -->
+          <rect x="86" y="156" width="108" height="110" rx="24" fill="url(#hm_shell)" stroke="#1a2438" stroke-width="1"/>
+          <rect x="96" y="168" width="88" height="86" rx="16" fill="#060c14"/>
+          <circle cx="160" cy="206" r="22" fill="#0a1220" stroke="#1a2438" stroke-width="1"/>
+          <circle cx="160" cy="206" r="3" fill="#1a2438" opacity="0.3"/>
+          <!-- Arms -->
+          <ellipse cx="80" cy="172" rx="14" ry="14" fill="url(#hm_joint)" stroke="#1a2438" stroke-width="1"/>
+          <rect x="50" y="168" width="28" height="68" rx="12" fill="url(#hm_cyl)" stroke="#1a2438" stroke-width="0.8"/>
+          <rect x="48" y="248" width="26" height="46" rx="11" fill="url(#hm_cyl)" stroke="#1a2438" stroke-width="0.8"/>
+          <ellipse cx="61" cy="302" rx="16" ry="14" fill="url(#hm_joint)" stroke="#1a2438" stroke-width="0.8"/>
+          <ellipse cx="200" cy="172" rx="14" ry="14" fill="url(#hm_joint)" stroke="#1a2438" stroke-width="1"/>
+          <rect x="202" y="168" width="28" height="68" rx="12" fill="url(#hm_cyl)" stroke="#1a2438" stroke-width="0.8"/>
+          <rect x="206" y="248" width="26" height="46" rx="11" fill="url(#hm_cyl)" stroke="#1a2438" stroke-width="0.8"/>
+          <ellipse cx="219" cy="302" rx="16" ry="14" fill="url(#hm_joint)" stroke="#1a2438" stroke-width="0.8"/>
+          <!-- Neck -->
+          <rect x="120" y="138" width="40" height="20" rx="9" fill="url(#hm_shell)" stroke="#1a2438" stroke-width="0.8"/>
+          <!-- Head -->
+          <ellipse cx="140" cy="84" rx="74" ry="66" fill="url(#hm_head)" stroke="#1a2438" stroke-width="1.2"/>
+          <rect x="68" y="56" width="144" height="60" rx="26" fill="#0a1220" stroke="#1a2438" stroke-width="1"/>
+          <circle cx="104" cy="80" r="20" fill="#0c1420" stroke="#1a2438" stroke-width="1"/>
+          <circle cx="104" cy="80" r="3.5" fill="#1a2438" opacity="0.3"/>
+          <circle cx="104" cy="80" r="10" id="homeEyeL" fill="#4A90E2" opacity="0" filter="url(#hmEyeGlow)"/>
+          <circle cx="176" cy="80" r="20" fill="#0c1420" stroke="#1a2438" stroke-width="1"/>
+          <circle cx="176" cy="80" r="3.5" fill="#1a2438" opacity="0.3"/>
+          <circle cx="176" cy="80" r="10" id="homeEyeR" fill="#4A90E2" opacity="0" filter="url(#hmEyeGlow)"/>
+          <path d="M114 102 L166 102" fill="none" stroke="#1a2438" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+          <!-- Ears -->
+          <circle cx="68" cy="58" r="7" fill="url(#hm_joint)" stroke="#1a2438" stroke-width="1"/>
+          <circle cx="212" cy="58" r="7" fill="url(#hm_joint)" stroke="#1a2438" stroke-width="1"/>
+          <!-- Antenna -->
+          <line x1="140" y1="18" x2="140" y2="32" stroke="#1a2438" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="140" cy="14" r="8" fill="url(#hm_joint)" stroke="#1a2438" stroke-width="1.5"/>
+          <!-- Antenna LED — faint pulse -->
+          <circle cx="140" cy="14" r="4" fill="#93C5FD" opacity="0.15" style="animation:antennaPulse 2s infinite" filter="url(#hmGlow)"/>
+          <!-- Foot glow slots (off by default, turn on after Day 1) -->
+          <rect x="78" y="340" width="56" height="3" rx="1.5" id="homeFootL" fill="#4A90E2" opacity="0"/>
+          <rect x="146" y="340" width="56" height="3" rx="1.5" id="homeFootR" fill="#4A90E2" opacity="0"/>
+        </svg>
+      </div>
+
+      <div class="home-title" id="homeTitle">Meet Archie.</div>
+      <div class="home-sub" id="homeSub">He needs your help to power him on.<br/>Complete daily lessons to bring him to life.</div>
+
+      <!-- Progress -->
+      <div class="home-progress">
+        <div class="pct" id="homePct">0%</div>
+        <div class="label">Archie Power</div>
+        <div class="bar-w"><div class="bar-f" id="homeBar" style="width:0%;"></div></div>
+      </div>
+
+      <button class="btn btn-primary btn-glow" id="homeBtn" onclick="startDay1()">Start your AI journey</button>
+
+      <div class="spacer"></div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- STEP 1 — SHOW THE LESSON -->
+    <!-- ============================================ -->
+    <div class="screen" id="s1">
+      <div class="top-bar">
+        <div class="day-badge">Day 1</div>
+        <div class="mini-bar-wrap"><div class="mini-bar" id="miniBar"></div></div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="lesson-icon">⚡</div>
+
+      <div class="lesson-title">Let's try something<br/>simple.</div>
+
+      <div class="lesson-sub">This will take less than 2 minutes.</div>
+
+      <div class="spacer"></div>
+
+      <button class="btn btn-primary btn-glow" onclick="goTo('s2')">Continue</button>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- STEP 2 — GIVE THE TASK -->
+    <!-- ============================================ -->
+    <div class="screen" id="s2">
+      <div class="top-bar">
+        <div class="day-badge">Day 1</div>
+        <div class="mini-bar-wrap"><div class="mini-bar" style="width:20%;"></div></div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="lesson-title">We're going to use AI<br/>for the first time.</div>
+
+      <div class="divider"></div>
+
+      <div class="lesson-text">Don't overthink it —<br/>just follow along.</div>
+
+      <div class="spacer"></div>
+
+      <button class="btn btn-primary" onclick="goTo('s3')">Next</button>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- STEP 3 + 4 + 5 — PROMPT + BUTTONS + RETURN TRIGGER -->
+    <!-- ============================================ -->
+    <div class="screen" id="s3">
+      <div class="top-bar">
+        <div class="day-badge" id="skipBadge">Day 1</div>
+        <div class="mini-bar-wrap"><div class="mini-bar" style="width:40%;"></div></div>
+      </div>
+
+      <div class="lesson-text" style="margin-top:1rem;margin-bottom:0.5rem;">Open ChatGPT and paste this:</div>
+
+      <div class="lesson-text" style="font-size:13px;color:#93C5FD;margin-bottom:0.25rem;">You don't need to understand it — just try it.</div>
+
+      <div class="lesson-text" style="font-size:13px;color:#93C5FD;margin-bottom:1rem;">You can't mess this up.</div>
+
+      <div class="prompt-box">
+        <div class="prompt-label">Your prompt</div>
+        <div class="prompt-text">Explain what I do for a living in a way that would make a 10-year-old think it's the coolest job in the world. My job is: </div>
+      </div>
+
+      <div class="lesson-text" style="font-size:13px;color:#93C5FD;margin-bottom:0.5rem;">This is where it starts.</div>
+      <div class="lesson-text" style="font-size:13px;color:#7BB3F0;margin-bottom:0.75rem;">This will take 10 seconds.</div>
+
+      <!-- SINGLE ACTION BUTTON -->
+      <button class="btn btn-primary btn-glow" onclick="copyAndOpen()">Copy prompt ⚡</button>
+
+      <div style="margin-top:1.5rem;text-align:center;">
+        <div class="divider"></div>
+        <div class="lesson-text return-message" style="font-size:13px;color:#7BB3F0;">Come back here — I'll be waiting.</div>
+      </div>
+
+      <button class="btn btn-ghost return-btn" style="margin-top:0.75rem;" onclick="goTo('s4')">I did it — power up Archie</button>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- RETURN MOMENT OVERLAY -->
+    <!-- ============================================ -->
+    <div class="modal-overlay" id="returnOverlay">
+      <div style="text-align:center;max-width:300px;">
+        <div style="font-size:22px;color:#E8F2FF;font-weight:600;line-height:1.6;margin-bottom:0.75rem;">"Pretty wild, right?"</div>
+        <div style="font-size:15px;color:#93C5FD;line-height:1.8;margin-bottom:2.5rem;">That's AI. This is just the beginning.</div>
+        <button class="btn btn-primary btn-glow btn-pulse" onclick="goTo('s4')" style="margin-bottom:1.5rem;">Power up Archie ⚡</button>
+        <div style="font-size:11px;color:#3a6a9a;cursor:pointer;letter-spacing:0.5px;" onclick="dismissReturnOverlay()">← Try again in ChatGPT</div>
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- STEP 6 — RETURN SCREEN -->
+    <!-- ============================================ -->
+    <div class="screen" id="s4">
+      <div class="top-bar">
+        <div class="day-badge">Day 1</div>
+        <div class="mini-bar-wrap"><div class="mini-bar" style="width:70%;"></div></div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="lesson-title">Did you try it?</div>
+
+      <div class="lesson-sub">Be honest — Archie can tell.</div>
+
+      <div class="spacer"></div>
+
+      <button class="btn btn-primary btn-glow" onclick="triggerReward()">I did it ⚡</button>
+
+      <div class="text-link" style="margin-top:12px;" onclick="goTo('s3')">← Go back and try it</div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- STEP 7 + 8 + 9 — REWARD + PROGRESS + CLOSE -->
+    <!-- ============================================ -->
+    <div class="reward-overlay" id="reward">
+
+      <!-- Archie mini glow -->
+      <div style="flex:1;min-height:0.5rem;"></div>
+      <div class="archie-mini" id="archieReward">
+        <svg width="180" height="260" viewBox="0 0 280 400" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="rw_head" cx="35%" cy="28%" r="70%">
+              <stop offset="0%" stop-color="#1e2c42"/><stop offset="100%" stop-color="#0a1220"/>
+            </radialGradient>
+            <linearGradient id="rw_shell" x1="10%" y1="0%" x2="90%" y2="100%">
+              <stop offset="0%" stop-color="#1a2438"/><stop offset="100%" stop-color="#0c1420"/>
+            </linearGradient>
+            <linearGradient id="rw_cyl" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#1a2438"/><stop offset="50%" stop-color="#0f1a2c"/><stop offset="100%" stop-color="#0c1420"/>
+            </linearGradient>
+            <radialGradient id="rw_joint" cx="40%" cy="30%" r="65%">
+              <stop offset="0%" stop-color="#1a2438"/><stop offset="100%" stop-color="#0c1420"/>
+            </radialGradient>
+            <filter id="rwGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="rwEyeGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="rwBigGlow" x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <ellipse cx="140" cy="365" rx="60" ry="8" fill="#1a2438" opacity="0.15"/>
+          <!-- Legs -->
+          <rect x="90" y="258" width="36" height="50" rx="14" fill="url(#rw_cyl)" stroke="#1a2438" stroke-width="0.8"/>
+          <rect x="154" y="258" width="36" height="50" rx="14" fill="url(#rw_cyl)" stroke="#1a2438" stroke-width="0.8"/>
+          <rect x="82" y="300" width="48" height="34" rx="14" fill="url(#rw_cyl)" stroke="#1a2438" stroke-width="0.8"/>
+          <rect x="150" y="300" width="48" height="34" rx="14" fill="url(#rw_cyl)" stroke="#1a2438" stroke-width="0.8"/>
+          <rect x="76" y="330" width="60" height="14" rx="7" fill="url(#rw_cyl)" stroke="#1a2438" stroke-width="0.8"/>
+          <rect x="144" y="330" width="60" height="14" rx="7" fill="url(#rw_cyl)" stroke="#1a2438" stroke-width="0.8"/>
+          <!-- Foot glow -->
+          <rect x="78" y="340" width="56" height="3" rx="1.5" id="footGlowL" fill="#4A90E2" opacity="0"/>
+          <rect x="146" y="340" width="56" height="3" rx="1.5" id="footGlowR" fill="#4A90E2" opacity="0"/>
+          <!-- Torso -->
+          <rect x="86" y="156" width="108" height="110" rx="24" fill="url(#rw_shell)" stroke="#1a2438" stroke-width="1"/>
+          <rect x="96" y="168" width="88" height="86" rx="16" fill="#060c14"/>
+          <circle cx="160" cy="206" r="22" fill="#0a1220" stroke="#1a2438" stroke-width="1"/>
+          <circle cx="160" cy="206" r="3" fill="#1a2438" opacity="0.3"/>
+          <circle cx="160" cy="206" r="18" id="rwChestGlow" fill="#4A90E2" opacity="0" filter="url(#rwEyeGlow)"/>
+          <!-- Arms -->
+          <ellipse cx="80" cy="172" rx="14" ry="14" fill="url(#rw_joint)" stroke="#1a2438" stroke-width="1"/>
+          <rect x="50" y="168" width="28" height="68" rx="12" fill="url(#rw_cyl)" stroke="#1a2438" stroke-width="0.8"/>
+          <rect x="48" y="248" width="26" height="46" rx="11" fill="url(#rw_cyl)" stroke="#1a2438" stroke-width="0.8"/>
+          <ellipse cx="61" cy="302" rx="16" ry="14" fill="url(#rw_joint)" stroke="#1a2438" stroke-width="0.8"/>
+          <ellipse cx="200" cy="172" rx="14" ry="14" fill="url(#rw_joint)" stroke="#1a2438" stroke-width="1"/>
+          <rect x="202" y="168" width="28" height="68" rx="12" fill="url(#rw_cyl)" stroke="#1a2438" stroke-width="0.8"/>
+          <rect x="206" y="248" width="26" height="46" rx="11" fill="url(#rw_cyl)" stroke="#1a2438" stroke-width="0.8"/>
+          <ellipse cx="219" cy="302" rx="16" ry="14" fill="url(#rw_joint)" stroke="#1a2438" stroke-width="0.8"/>
+          <!-- Neck -->
+          <rect x="120" y="138" width="40" height="20" rx="9" fill="url(#rw_shell)" stroke="#1a2438" stroke-width="0.8"/>
+          <!-- Head -->
+          <ellipse cx="140" cy="84" rx="74" ry="66" fill="url(#rw_head)" stroke="#1a2438" stroke-width="1.2"/>
+          <rect x="68" y="56" width="144" height="60" rx="26" fill="#0a1220" stroke="#1a2438" stroke-width="1"/>
+          <!-- Eyes -->
+          <circle cx="104" cy="80" r="20" fill="#0c1420" stroke="#1a2438" stroke-width="1"/>
+          <circle cx="104" cy="80" r="8" id="rwEyeL" fill="#4A90E2" opacity="0" filter="url(#rwEyeGlow)"/>
+          <circle cx="176" cy="80" r="20" fill="#0c1420" stroke="#1a2438" stroke-width="1"/>
+          <circle cx="176" cy="80" r="8" id="rwEyeR" fill="#4A90E2" opacity="0" filter="url(#rwEyeGlow)"/>
+          <!-- Mouth -->
+          <path d="M114 102 L166 102" fill="none" id="rwMouth" stroke="#1a2438" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+          <!-- Ears -->
+          <circle cx="68" cy="58" r="7" fill="url(#rw_joint)" stroke="#1a2438" stroke-width="1"/>
+          <circle cx="212" cy="58" r="7" fill="url(#rw_joint)" stroke="#1a2438" stroke-width="1"/>
+          <circle cx="68" cy="58" r="3" id="rwEarL" fill="#4A90E2" opacity="0" filter="url(#rwGlow)"/>
+          <circle cx="212" cy="58" r="3" id="rwEarR" fill="#4A90E2" opacity="0" filter="url(#rwGlow)"/>
+          <!-- Antenna -->
+          <line x1="140" y1="18" x2="140" y2="32" stroke="#1a2438" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="140" cy="14" r="8" fill="url(#rw_joint)" stroke="#1a2438" stroke-width="1.5"/>
+          <circle cx="140" cy="14" r="4" id="rwAntennaLED" fill="#93C5FD" opacity="0.15" filter="url(#rwGlow)"/>
+          <!-- Body ambient glow -->
+          <ellipse cx="140" cy="200" rx="100" ry="140" id="rwBodyGlow" fill="#4A90E2" opacity="0" filter="url(#rwBigGlow)"/>
+        </svg>
+      </div>
+
+      <!-- Reward text lines (appear sequentially) -->
+      <div class="reward-text" id="rw0" style="margin-bottom:0.75rem;">
+        You actually did it.
+      </div>
+
+      <div class="reward-text" id="rw1" style="margin-bottom:0.5rem;">
+        <span class="big">You just used AI.</span>
+      </div>
+
+      <div class="reward-text" id="rw2" style="margin-bottom:0.5rem;">
+        You crossed a line<br/>most people never do.
+      </div>
+
+      <div class="reward-text" id="rw3" style="margin-bottom:1.5rem;">
+        <span class="highlight">You're already ahead ⚡</span>
+      </div>
+
+      <!-- Progress bump -->
+      <div class="progress-bump" id="progressBump">
+        <div class="pct" id="rewardPct">3%</div>
+        <div class="label">Archie Power</div>
+        <div class="bar-w"><div class="bar-f" id="rewardBar"></div></div>
+      </div>
+
+      <div class="reward-text" id="rw4" style="margin-top:1.25rem;font-size:14px;">
+        That's Day 1 complete.
+      </div>
+
+      <button class="btn btn-primary btn-glow" id="rwBtn" style="margin-top:1.25rem;opacity:0;transition:opacity 0.8s;" onclick="returnHome()">See you tomorrow</button>
+      <div style="flex:1;min-height:0.5rem;"></div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<script>
+// Stars
+var starsEl=document.getElementById('stars');
+for(var i=0;i<100;i++){var s=document.createElement('div');s.className='star';var sz=Math.random()*2.5+0.5;s.style.cssText='width:'+sz+'px;height:'+sz+'px;top:'+Math.random()*100+'%;left:'+Math.random()*100+'%;animation:twinkle '+(Math.random()*4+2).toFixed(1)+'s ease-in-out infinite '+(Math.random()*6).toFixed(1)+'s;';starsEl.appendChild(s);}
+
+// Audio
+var audioCtx=null;
+function getAudioCtx(){
+  if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==='suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+// Unlock audio context on first user interaction (required on mobile)
+var audioUnlocked=false;
+function unlockAudio(){
+  if(audioUnlocked) return;
+  audioUnlocked=true;
+  var ctx=getAudioCtx();
+  if(ctx.state==='suspended') ctx.resume();
+  // Create and immediately stop a silent buffer to fully unlock
+  var buf=ctx.createBuffer(1,1,22050);
+  var src=ctx.createBufferSource();
+  src.buffer=buf;src.connect(ctx.destination);
+  src.start(0);src.stop(0.001);
+}
+document.addEventListener('touchstart',unlockAudio,{once:true});
+document.addEventListener('click',unlockAudio,{once:true});
+
+// ── SOUND 1: Tap / Navigation ──
+// Soft glass-touch tick. Barely there, but satisfying.
+function sfxTap(){
+  try{
+    var ctx=getAudioCtx();var t=ctx.currentTime;
+    // Soft high-freq tick
+    var o=ctx.createOscillator();var g=ctx.createGain();
+    o.type='sine';
+    o.frequency.setValueAtTime(1800,t);
+    o.frequency.exponentialRampToValueAtTime(1200,t+0.04);
+    g.gain.setValueAtTime(0.06,t);
+    g.gain.exponentialRampToValueAtTime(0.001,t+0.06);
+    o.connect(g);g.connect(ctx.destination);
+    o.start(t);o.stop(t+0.07);
+    // Subtle sub-layer for body
+    var o2=ctx.createOscillator();var g2=ctx.createGain();
+    o2.type='sine';o2.frequency.value=400;
+    g2.gain.setValueAtTime(0.03,t);
+    g2.gain.exponentialRampToValueAtTime(0.001,t+0.04);
+    o2.connect(g2);g2.connect(ctx.destination);
+    o2.start(t);o2.stop(t+0.05);
+  }catch(e){}
+}
+
+// ── SOUND 2: Action (Copy & Open) ──
+// Quick whoosh-click. Slightly stronger, signals initiation.
+function sfxAction(){
+  try{
+    var ctx=getAudioCtx();var t=ctx.currentTime;
+    // Sweep up (whoosh)
+    var o=ctx.createOscillator();var g=ctx.createGain();
+    o.type='sine';
+    o.frequency.setValueAtTime(300,t);
+    o.frequency.exponentialRampToValueAtTime(1400,t+0.08);
+    g.gain.setValueAtTime(0.08,t);
+    g.gain.linearRampToValueAtTime(0.1,t+0.03);
+    g.gain.exponentialRampToValueAtTime(0.001,t+0.15);
+    o.connect(g);g.connect(ctx.destination);
+    o.start(t);o.stop(t+0.16);
+    // Click layer
+    var o2=ctx.createOscillator();var g2=ctx.createGain();
+    o2.type='triangle';
+    o2.frequency.setValueAtTime(1600,t+0.06);
+    o2.frequency.exponentialRampToValueAtTime(900,t+0.1);
+    g2.gain.setValueAtTime(0,t);
+    g2.gain.setValueAtTime(0.07,t+0.06);
+    g2.gain.exponentialRampToValueAtTime(0.001,t+0.12);
+    o2.connect(g2);g2.connect(ctx.destination);
+    o2.start(t);o2.stop(t+0.13);
+  }catch(e){}
+}
+
+// ── SOUND 3: Reward (power-up) ──
+// Robotic vrrrrrrRRRRRRRRRm → clean activation peak. Premium.
+function sfxReward(){
+  try{
+    var ctx=getAudioCtx();var t=ctx.currentTime;
+
+    // Main tone — triangle for texture
+    var vr=ctx.createOscillator();var vg=ctx.createGain();
+    vr.type='triangle';
+    vr.frequency.setValueAtTime(60,t);
+    vr.frequency.exponentialRampToValueAtTime(600,t+1.3);
+    vr.frequency.exponentialRampToValueAtTime(900,t+1.5);
+    // Smooth fade-in instead of abrupt start
+    vg.gain.setValueAtTime(0.0,t);
+    vg.gain.linearRampToValueAtTime(0.02,t+0.15);
+    vg.gain.linearRampToValueAtTime(0.06,t+0.6);
+    vg.gain.linearRampToValueAtTime(0.11,t+1.3);
+    vg.gain.linearRampToValueAtTime(0.11,t+1.5);
+    vg.gain.exponentialRampToValueAtTime(0.001,t+1.7);
+
+    // LFO — modulates the main gain for robotic stutter
+    var lfo=ctx.createOscillator();var lfoGain=ctx.createGain();
+    lfo.type='sine';
+    lfo.frequency.setValueAtTime(6,t);
+    lfo.frequency.linearRampToValueAtTime(18,t+1.0);
+    lfo.frequency.linearRampToValueAtTime(30,t+1.3);
+    lfoGain.gain.setValueAtTime(0.04,t);
+    lfoGain.gain.linearRampToValueAtTime(0.02,t+1.0);
+    lfoGain.gain.linearRampToValueAtTime(0.005,t+1.4);
+    lfo.connect(lfoGain);lfoGain.connect(vg.gain);
+    lfo.start(t);lfo.stop(t+1.7);
+
+    vr.connect(vg);vg.connect(ctx.destination);
+    vr.start(t);vr.stop(t+1.7);
+
+    // Detuned twin — slightly off-pitch for machine beating
+    var dt=ctx.createOscillator();var dg=ctx.createGain();
+    dt.type='triangle';
+    dt.frequency.setValueAtTime(63,t);
+    dt.frequency.exponentialRampToValueAtTime(608,t+1.3);
+    dt.frequency.exponentialRampToValueAtTime(907,t+1.5);
+    dg.gain.setValueAtTime(0.0,t);
+    dg.gain.linearRampToValueAtTime(0.01,t+0.15);
+    dg.gain.linearRampToValueAtTime(0.04,t+0.6);
+    dg.gain.linearRampToValueAtTime(0.07,t+1.3);
+    dg.gain.exponentialRampToValueAtTime(0.001,t+1.7);
+    dt.connect(dg);dg.connect(ctx.destination);
+    dt.start(t);dt.stop(t+1.7);
+
+    // Quiet square wave layer — hint of digital grit
+    var sq=ctx.createOscillator();var sqg=ctx.createGain();
+    sq.type='square';
+    sq.frequency.setValueAtTime(60,t);
+    sq.frequency.exponentialRampToValueAtTime(450,t+1.3);
+    sq.frequency.exponentialRampToValueAtTime(700,t+1.5);
+    sqg.gain.setValueAtTime(0.003,t);
+    sqg.gain.linearRampToValueAtTime(0.01,t+0.6);
+    sqg.gain.linearRampToValueAtTime(0.015,t+1.3);
+    sqg.gain.exponentialRampToValueAtTime(0.001,t+1.7);
+    sq.connect(sqg);sqg.connect(ctx.destination);
+    sq.start(t);sq.stop(t+1.7);
+
+  }catch(e){}
+}
+
+// Legacy alias
+function sfxBlip(){sfxTap();}
+
+// Navigation
+function goTo(id){
+  sfxBlip();
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById(id).classList.add('active');
+}
+
+// ================================
+// SKIP SHORTCUT — triple tap ARCHIE on splash
+// ================================
+var skipTaps = 0;
+var skipTimer = null;
+document.getElementById('splashTitle').addEventListener('click', function(){
+  skipTaps++;
+  clearTimeout(skipTimer);
+  skipTimer = setTimeout(function(){ skipTaps = 0; }, 600);
+  if(skipTaps >= 3){
+    skipTaps = 0;
+    document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+    document.getElementById('s3').classList.add('active');
+  }
+});
+
+// ================================
+// CHATGPT FLOW
+// ================================
+var promptText = 'Explain what I do for a living in a way that would make a 10-year-old think it\'s the coolest job in the world. My job is: ';
+var leftForChatGPT = false;
+
+function copyAndOpen(){
+  sfxAction();
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(promptText).then(showGuide).catch(fallbackCopy);
+  } else {
+    fallbackCopy();
+  }
+}
+
+function fallbackCopy(){
+  var ta = document.createElement('textarea');
+  ta.value = promptText;
+  ta.style.position='fixed';ta.style.opacity='0';ta.style.top='0';ta.style.left='0';
+  document.body.appendChild(ta);
+  ta.focus();ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  document.body.removeChild(ta);
+  showGuide();
+}
+
+function showGuide(){
+  var guide = document.getElementById('chatgptGuide');
+  guide.classList.add('active');
+  setTimeout(function(){ guide.classList.add('visible'); }, 10);
+}
+
+function launchChatGPT(){
+  leftForChatGPT = true;
+  window.open('https://chat.openai.com','_blank');
+  dismissGuide();
+}
+
+function dismissGuide(){
+  var guide = document.getElementById('chatgptGuide');
+  guide.classList.remove('visible');
+  setTimeout(function(){ guide.classList.remove('active'); }, 200);
+}
+
+// Detect return from ChatGPT
+function handleReturn(){
+  if(leftForChatGPT){
+    leftForChatGPT = false;
+    setTimeout(function(){
+      var overlay = document.getElementById('returnOverlay');
+      overlay.classList.add('active');
+      setTimeout(function(){ overlay.classList.add('visible'); }, 10);
+    }, 200);
+  }
+}
+
+function dismissReturnOverlay(){
+  var overlay = document.getElementById('returnOverlay');
+  overlay.classList.remove('visible');
+  setTimeout(function(){
+    overlay.classList.remove('active');
+    // Show instructions overlay instead of going straight to ChatGPT
+    showGuide();
+  }, 200);
+}
+
+window.addEventListener('focus', handleReturn);
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'visible') handleReturn();
+});
+
+// Open ChatGPT
+function openChatGPT(){
+  sfxBlip();
+  window.open('https://chat.openai.com','_blank');
+}
+
+// Modal
+function showModal(){
+  sfxBlip();
+  document.getElementById('modal').classList.add('active');
+}
+function closeModal(){
+  document.getElementById('modal').classList.remove('active');
+}
+
+// ── SOUND 4: Chime — systems online confirmation ──
+function sfxChime(){
+  try{
+    var ctx=getAudioCtx();var t=ctx.currentTime;
+    var o1=ctx.createOscillator();var g1=ctx.createGain();
+    o1.type='sine';o1.frequency.setValueAtTime(880,t);
+    g1.gain.setValueAtTime(0,t);g1.gain.linearRampToValueAtTime(0.15,t+0.02);
+    g1.gain.setValueAtTime(0.15,t+0.08);g1.gain.exponentialRampToValueAtTime(0.001,t+0.35);
+    o1.connect(g1);g1.connect(ctx.destination);o1.start(t);o1.stop(t+0.35);
+    var o2=ctx.createOscillator();var g2=ctx.createGain();
+    o2.type='sine';o2.frequency.setValueAtTime(1318,t+0.1);
+    g2.gain.setValueAtTime(0,t);g2.gain.linearRampToValueAtTime(0.12,t+0.12);
+    g2.gain.setValueAtTime(0.12,t+0.18);g2.gain.exponentialRampToValueAtTime(0.001,t+0.5);
+    o2.connect(g2);g2.connect(ctx.destination);o2.start(t+0.1);o2.stop(t+0.5);
+    var o3=ctx.createOscillator();var g3=ctx.createGain();
+    o3.type='sine';o3.frequency.setValueAtTime(1322,t+0.1);
+    g3.gain.setValueAtTime(0,t);g3.gain.linearRampToValueAtTime(0.04,t+0.12);
+    g3.gain.exponentialRampToValueAtTime(0.001,t+0.5);
+    o3.connect(g3);g3.connect(ctx.destination);o3.start(t+0.1);o3.stop(t+0.5);
+  }catch(e){}
+}
+
+// ── SOUND 5: Settle — descending wind-down ──
+function sfxSettle(){
+  try{
+    var ctx=getAudioCtx();var t=ctx.currentTime;
+    var osc=ctx.createOscillator();var gain=ctx.createGain();
+    osc.type='triangle';osc.frequency.setValueAtTime(800,t);
+    osc.frequency.exponentialRampToValueAtTime(120,t+0.45);
+    gain.gain.setValueAtTime(0.08,t);gain.gain.linearRampToValueAtTime(0.06,t+0.1);
+    gain.gain.exponentialRampToValueAtTime(0.001,t+0.5);
+    osc.connect(gain);gain.connect(ctx.destination);osc.start(t);osc.stop(t+0.5);
+    var sub=ctx.createOscillator();var sg=ctx.createGain();
+    sub.type='sine';sub.frequency.setValueAtTime(200,t);
+    sub.frequency.exponentialRampToValueAtTime(60,t+0.4);
+    sg.gain.setValueAtTime(0.04,t);sg.gain.exponentialRampToValueAtTime(0.001,t+0.5);
+    sub.connect(sg);sg.connect(ctx.destination);sub.start(t);sub.stop(t+0.5);
+  }catch(e){}
+}
+
+// ── SOUND 6: Ambient breathing hum ──
+var ambientNodes=null;
+function sfxAmbientStart(){
+  try{
+    var ctx=getAudioCtx();var t=ctx.currentTime;var nodes={};
+    var hum=ctx.createOscillator();var humGain=ctx.createGain();
+    hum.type='sine';hum.frequency.setValueAtTime(110,t);
+    humGain.gain.setValueAtTime(0,t);humGain.gain.linearRampToValueAtTime(0.018,t+3);
+    hum.connect(humGain);humGain.connect(ctx.destination);hum.start(t);
+    nodes.hum=hum;nodes.humGain=humGain;
+    var hum2=ctx.createOscillator();var hum2Gain=ctx.createGain();
+    hum2.type='sine';hum2.frequency.setValueAtTime(110.4,t);
+    hum2Gain.gain.setValueAtTime(0,t);hum2Gain.gain.linearRampToValueAtTime(0.01,t+3);
+    hum2.connect(hum2Gain);hum2Gain.connect(ctx.destination);hum2.start(t);
+    nodes.hum2=hum2;nodes.hum2Gain=hum2Gain;
+    var lfo=ctx.createOscillator();var lfoGain=ctx.createGain();
+    lfo.type='sine';lfo.frequency.setValueAtTime(0.14,t);
+    lfoGain.gain.setValueAtTime(0.02,t);
+    lfo.connect(lfoGain);lfoGain.connect(humGain.gain);lfoGain.connect(hum2Gain.gain);
+    lfo.start(t);nodes.lfo=lfo;nodes.lfoGain=lfoGain;
+    ambientNodes=nodes;
+  }catch(e){}
+}
+function sfxAmbientStop(){
+  if(!ambientNodes)return;
+  try{
+    var ctx=getAudioCtx();var t=ctx.currentTime;
+    ['humGain','hum2Gain'].forEach(function(k){if(ambientNodes[k])ambientNodes[k].gain.linearRampToValueAtTime(0,t+0.8);});
+    setTimeout(function(){try{['hum','hum2','lfo'].forEach(function(k){if(ambientNodes[k])ambientNodes[k].stop();});}catch(e){}},900);
+    ambientNodes=null;
+  }catch(e){}
+}
+
+// ================================
+// THE REWARD SEQUENCE
+// ================================
+function triggerReward(){
+  // Hide all screens so s4 doesn't bleed through
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+
+  var overlay=document.getElementById('reward');
+  overlay.classList.add('active');
+  setTimeout(function(){overlay.classList.add('dimmed');},50);
+
+  // Phase 1: Sound starts (0s)
+  sfxReward();
+
+  var archie=document.getElementById('archieReward');
+
+  // Phase 2: Archie fades in dark (0.4s)
+  setTimeout(function(){
+    archie.classList.add('visible');
+  },400);
+
+  // Phase 3: Antenna brightens (0.6s)
+  var antenna=document.getElementById('rwAntennaLED');
+  setTimeout(function(){
+    antenna.style.transition='opacity 0.6s ease';
+    antenna.setAttribute('opacity','0.6');
+    antenna.setAttribute('r','5');
+  },600);
+
+  // Phase 3b: Chest glow (1.0s)
+  var chestGlow=document.getElementById('rwChestGlow');
+  setTimeout(function(){
+    chestGlow.style.transition='opacity 0.4s ease';
+    chestGlow.setAttribute('opacity','0.08');
+  },1000);
+
+  // Phase 4: EYES FIRE ON + CHIME + FLASH + POP (1.7s)
+  setTimeout(function(){
+    sfxChime();
+
+    // Micro flash
+    var phoneInner=document.querySelector('.phone-inner');
+    phoneInner.style.background='#0a1220';
+    setTimeout(function(){phoneInner.style.background='#000';},80);
+
+    // Scale pop
+    archie.style.transition='transform 0.12s ease';
+    archie.style.transform='scale(1.05)';
+    setTimeout(function(){
+      archie.style.transition='transform 0.3s ease';
+      archie.style.transform='scale(1)';
+    },120);
+
+    // Eyes flicker on
+    document.getElementById('rwEyeL').style.animation='eyeFlicker 0.5s ease forwards';
+    document.getElementById('rwEyeR').style.animation='eyeFlicker 0.5s ease forwards';
+
+    // Antenna full
+    antenna.setAttribute('opacity','0.9');
+    antenna.setAttribute('r','6');
+
+    // Ears
+    document.getElementById('rwEarL').setAttribute('opacity','0.5');
+    document.getElementById('rwEarR').setAttribute('opacity','0.5');
+
+    // Chest brightens
+    chestGlow.setAttribute('opacity','0.12');
+
+    // Mouth
+    document.getElementById('rwMouth').setAttribute('stroke','#4A90E2');
+    document.getElementById('rwMouth').setAttribute('opacity','0.6');
+
+    // Body ambient
+    var bodyGlow=document.getElementById('rwBodyGlow');
+    bodyGlow.style.transition='opacity 1.5s ease';
+    bodyGlow.setAttribute('opacity','0.04');
+  },1700);
+
+  // Phase 5: Breathing hum + bob (2.2s)
+  setTimeout(function(){
+    sfxAmbientStart();
+    archie.querySelector('svg').style.animation='softBob 4s ease-in-out infinite, glowPulse 3s ease-in-out infinite';
+  },2200);
+
+  // Phase 6: Foot glow (2.5s)
+  setTimeout(function(){
+    document.getElementById('footGlowL').style.animation='footPulse 2s infinite';
+    document.getElementById('footGlowL').setAttribute('opacity','0.15');
+    document.getElementById('footGlowR').style.animation='footPulse 2s infinite';
+    document.getElementById('footGlowR').setAttribute('opacity','0.15');
+  },2500);
+
+  // === TEXT ===
+  setTimeout(function(){document.getElementById('rw0').classList.add('visible');},2300);
+  setTimeout(function(){document.getElementById('rw1').classList.add('visible');},3300);
+  setTimeout(function(){document.getElementById('rw2').classList.add('visible');},4500);
+  setTimeout(function(){document.getElementById('rw3').classList.add('visible');},5600);
+
+  // Progress bar (6.6s)
+  setTimeout(function(){
+    document.getElementById('progressBump').classList.add('visible');
+    setTimeout(function(){document.getElementById('rewardBar').style.width='3%';},300);
+  },6600);
+
+  // Eyes dim back down (7.0s)
+  setTimeout(function(){
+    var eL=document.getElementById('rwEyeL');
+    var eR=document.getElementById('rwEyeR');
+    eL.style.animation='none';eR.style.animation='none';
+    eL.style.transition='opacity 2s ease';eR.style.transition='opacity 2s ease';
+    eL.setAttribute('opacity','0');eR.setAttribute('opacity','0');
+  },7000);
+
+  // "That's Day 1 complete." (7.2s)
+  setTimeout(function(){document.getElementById('rw4').classList.add('visible');},7200);
+
+  // Button (8.0s)
+  setTimeout(function(){document.getElementById('rwBtn').style.opacity='1';},8000);
+}
+
+// Track completion state
+var day1Complete=false;
+
+// Start Day 1 from home screen
+function startDay1(){
+  sfxTap();
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('s1').classList.add('active');
+}
+
+// Return to home screen after reward
+function returnHome(){
+  sfxSettle();
+  sfxAmbientStop();
+  day1Complete=true;
+
+  // Fade out reward overlay
+  var overlay=document.getElementById('reward');
+  overlay.style.transition='opacity 0.8s ease';
+  overlay.style.opacity='0';
+
+  setTimeout(function(){
+    // Clean up reward
+    overlay.classList.remove('active','dimmed');
+    overlay.style.transition='';overlay.style.opacity='';
+    document.getElementById('archieReward').classList.remove('visible');
+    document.getElementById('archieReward').style.transform='';
+    document.getElementById('archieReward').style.transition='';
+    document.getElementById('archieReward').querySelector('svg').style.animation='none';
+    ['rw0','rw1','rw2','rw3','rw4'].forEach(function(id){document.getElementById(id).classList.remove('visible');});
+    document.getElementById('progressBump').classList.remove('visible');
+    document.getElementById('rewardBar').style.width='0%';
+    document.getElementById('rwBtn').style.opacity='0';
+    // Reset reward SVG elements
+    document.getElementById('rwEyeL').setAttribute('opacity','0');document.getElementById('rwEyeL').style.animation='none';document.getElementById('rwEyeL').style.transition='';
+    document.getElementById('rwEyeR').setAttribute('opacity','0');document.getElementById('rwEyeR').style.animation='none';document.getElementById('rwEyeR').style.transition='';
+    document.getElementById('rwEarL').setAttribute('opacity','0');
+    document.getElementById('rwEarR').setAttribute('opacity','0');
+    document.getElementById('rwChestGlow').setAttribute('opacity','0');document.getElementById('rwChestGlow').style.transition='';
+    document.getElementById('rwBodyGlow').setAttribute('opacity','0');document.getElementById('rwBodyGlow').style.transition='';
+    document.getElementById('rwMouth').setAttribute('stroke','#1a2438');document.getElementById('rwMouth').setAttribute('opacity','0.4');
+    document.getElementById('rwAntennaLED').setAttribute('opacity','0.15');document.getElementById('rwAntennaLED').setAttribute('r','4');document.getElementById('rwAntennaLED').style.transition='';
+    document.getElementById('footGlowL').setAttribute('opacity','0');document.getElementById('footGlowL').style.animation='none';
+    document.getElementById('footGlowR').setAttribute('opacity','0');document.getElementById('footGlowR').style.animation='none';
+
+    // Show home
+    document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+    document.getElementById('home').classList.add('active');
+
+    // Update home screen
+    document.getElementById('homeTitle').textContent='Archie is waking up.';
+    document.getElementById('homeSub').innerHTML='Day 1 complete.<br/>Come back tomorrow for Day 2.<br/><span style="color:#E8F2FF;font-weight:500;margin-top:4px;display:inline-block;">Don\'t break the streak.</span>';
+    document.getElementById('homePct').textContent='3%';
+    document.getElementById('homeBtn').textContent='See you tomorrow';
+    document.getElementById('homeBtn').onclick=null;
+    document.getElementById('homeBtn').style.opacity='0.5';
+    document.getElementById('homeBtn').style.cursor='default';
+
+    // Foot glow on home
+    document.getElementById('homeFootL').setAttribute('opacity','0.15');
+    document.getElementById('homeFootR').setAttribute('opacity','0.15');
+    document.getElementById('homeFootL').style.animation='footPulse 2s infinite';
+    document.getElementById('homeFootR').style.animation='footPulse 2s infinite';
+
+    // Progress bar
+    setTimeout(function(){document.getElementById('homeBar').style.width='3%';},400);
+
+    // Ambient hum after a beat
+    setTimeout(function(){sfxAmbientStart();},800);
+
+    // Eye flicker sequence — power tries to hold but can't
+    var hmEyeL=document.getElementById('homeEyeL');
+    var hmEyeR=document.getElementById('homeEyeR');
+
+    setTimeout(function(){
+      hmEyeL.style.transition='opacity 0.3s ease';
+      hmEyeR.style.transition='opacity 0.3s ease';
+      hmEyeL.setAttribute('opacity','0.35');
+      hmEyeR.setAttribute('opacity','0.35');
+    },1500);
+    setTimeout(function(){
+      hmEyeL.setAttribute('opacity','0.08');
+      hmEyeR.setAttribute('opacity','0.08');
+    },1800);
+    setTimeout(function(){
+      hmEyeL.setAttribute('opacity','0.4');
+      hmEyeR.setAttribute('opacity','0.4');
+    },2000);
+    setTimeout(function(){
+      hmEyeL.style.transition='opacity 1.5s ease';
+      hmEyeR.style.transition='opacity 1.5s ease';
+      hmEyeL.setAttribute('opacity','0');
+      hmEyeR.setAttribute('opacity','0');
+    },3200);
+  },800);
+}
+
+// Reset (for demo purposes)
+function resetDemo(){
+  sfxBlip();
+  sfxAmbientStop();
+  day1Complete=false;
+
+  var overlay=document.getElementById('reward');
+  overlay.classList.remove('active','dimmed');
+  overlay.style.transition='';overlay.style.opacity='';
+
+  // Reset home
+  document.getElementById('homeTitle').textContent='Meet Archie.';
+  document.getElementById('homeSub').innerHTML='He needs your help to power him on.<br/>Complete daily lessons to bring him to life.';
+  document.getElementById('homePct').textContent='0%';
+  document.getElementById('homeBar').style.width='0%';
+  document.getElementById('homeBtn').textContent='Start your AI journey';
+  document.getElementById('homeBtn').onclick=startDay1;
+  document.getElementById('homeBtn').style.opacity='1';
+  document.getElementById('homeBtn').style.cursor='pointer';
+  document.getElementById('homeFootL').setAttribute('opacity','0');document.getElementById('homeFootL').style.animation='none';
+  document.getElementById('homeFootR').setAttribute('opacity','0');document.getElementById('homeFootR').style.animation='none';
+  document.getElementById('homeEyeL').setAttribute('opacity','0');document.getElementById('homeEyeL').style.transition='';
+  document.getElementById('homeEyeR').setAttribute('opacity','0');document.getElementById('homeEyeR').style.transition='';
+
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('home').classList.add('active');
+}
+
+// ================================
+// CINEMATIC INTRO
+// ================================
+
+// Screen content definitions
+var cinContent = {
+  sc1: [
+    {t:'AI is the fastest growing technology in human history.', cls:'cin-big'},
+    {t:'', cls:'cin-space'},
+    {t:'Faster than the printing press.', cls:'cin-normal'},
+    {t:'Faster than electricity.', cls:'cin-normal'},
+    {t:'Faster than the internet.', cls:'cin-normal'},
+    {t:'Faster than the smartphone.', cls:'cin-normal'},
+    {t:'', cls:'cin-space'},
+    {t:"And it's just getting started.", cls:'cin-blue'}
+  ],
+  sc2: [
+    {t:'92 Million Jobs.', cls:'cin-stat'},
+    {t:'Will be displaced by AI by 2030.', cls:'cin-normal'},
+    {t:'— World Economic Forum, 2025', cls:'cin-source'},
+    {t:'Only 1 in 6 people.', cls:'cin-stat'},
+    {t:'Have even tried AI.', cls:'cin-normal'},
+    {t:'— Microsoft AI Report, 2025', cls:'cin-source'},
+    {t:'30% of all jobs.', cls:'cin-stat'},
+    {t:'Could be automated by the end of this decade.', cls:'cin-normal'},
+    {t:'— PwC', cls:'cin-source'},
+    {t:'', cls:'cin-space'},
+    {t:'The world is not waiting for you.', cls:'cin-blue'}
+  ]
+};
+
+// Screen content with per-line delays (ms)
+var cinContent = {
+  sc1: [
+    {t:'AI is the fastest growing technology in human history.', cls:'cin-big', delay:800},
+    {t:'', cls:'cin-space', delay:0},
+    {t:'Faster than the printing press.', cls:'cin-normal', delay:3200},
+    {t:'Faster than electricity.', cls:'cin-normal', delay:4600},
+    {t:'Faster than the internet.', cls:'cin-normal', delay:6000},
+    {t:'Faster than the smartphone.', cls:'cin-normal', delay:7400},
+    {t:'', cls:'cin-space', delay:0},
+    {t:"And it's just getting started.", cls:'cin-blue', delay:9200}
+  ],
+  sc2: [
+    {t:'92 Million Jobs.', cls:'cin-stat', group:1},
+    {t:'Will be displaced by AI by 2030.', cls:'cin-normal', group:1},
+    {t:'— World Economic Forum, 2025', cls:'cin-source', group:1},
+    {t:'Only 1 in 6 people.', cls:'cin-stat', group:2},
+    {t:'Have even tried AI.', cls:'cin-normal', group:2},
+    {t:'— Microsoft AI Report, 2025', cls:'cin-source', group:2},
+    {t:'30% of all jobs.', cls:'cin-stat', group:3},
+    {t:'Could be automated by the end of this decade.', cls:'cin-normal', group:3},
+    {t:'— PwC', cls:'cin-source', group:3},
+    {t:'', cls:'cin-space', group:0},
+    {t:'The world is not waiting for you.', cls:'cin-blue', group:4}
+  ]
+};
+
+var sc3Lines = [
+  {t:'But with every new tech evolution...', cls:'cin-normal', delay:800},
+  {t:'comes great opportunity.', cls:'cin-blue', delay:3000},
+  {t:'', cls:'cin-space', delay:0},
+  {t:'This is YOURS.', cls:'cin-big', delay:5500}
+];
+
+function runCinematic(screenId){
+  var screen=document.getElementById(screenId);
+  if(!screen) return;
+
+  // Fade screen in
+  screen.style.opacity='0';
+  setTimeout(function(){
+    var dur=screenId==='sc1'?'4s':'2.5s';
+    screen.style.transition='opacity '+dur+' ease';
+    screen.style.opacity='1';
+  },50);
+
+  if(screenId==='sc3'){
+    var container=document.getElementById('sc3content');
+    container.innerHTML='';
+    sc3Lines.forEach(function(line){
+      var el=document.createElement('div');
+      el.className=line.cls+' cin-line';
+      el.textContent=line.t;
+      container.appendChild(el);
+      if(line.delay>0){
+        setTimeout(function(){el.classList.add('visible');},line.delay);
+      }
+    });
+    var btn=document.getElementById('sc3btn');
+    btn.style.display='inline-block';
+    setTimeout(function(){btn.classList.add('visible');},7500);
+    return;
+  }
+
+  // Build content for sc1, sc2
+  var data=cinContent[screenId];
+  if(!data) return;
+  var container=document.getElementById(screenId+'content');
+  container.innerHTML='';
+  var maxDelay=0;
+
+  if(screenId==='sc2'){
+    // Group-based reveal: each stat block fades in together
+    var groupDelays={1:800, 2:4000, 3:7200, 4:10500};
+    data.forEach(function(line){
+      var el=document.createElement('div');
+      el.className=line.cls+' cin-line';
+      el.textContent=line.t;
+      container.appendChild(el);
+      var d=groupDelays[line.group];
+      if(d>0){
+        setTimeout(function(){el.classList.add('visible');},d);
+        if(d>maxDelay) maxDelay=d;
+      }
+    });
+  } else {
+    // Per-line delay for sc1
+    data.forEach(function(line){
+      var el=document.createElement('div');
+      el.className=line.cls+' cin-line';
+      el.textContent=line.t;
+      container.appendChild(el);
+      if(line.delay>0){
+        setTimeout(function(){el.classList.add('visible');},line.delay);
+        if(line.delay>maxDelay) maxDelay=line.delay;
+      }
+    });
+  }
+
+  // Show next button after last line
+  var btn=document.getElementById(screenId+'btn');
+  if(btn){
+    setTimeout(function(){btn.classList.add('visible');},maxDelay+2000);
+  }
+}
+
+function cinNext(targetId){
+  var cur=document.querySelector('.screen.active');
+  if(cur){
+    cur.style.transition='opacity 0.5s ease';
+    cur.style.opacity='0';
+    setTimeout(function(){
+      cur.style.opacity='';
+      cur.style.transition='';
+      cur.classList.remove('active');
+      document.getElementById(targetId).classList.add('active');
+      if(targetId!=='home'){
+        runCinematic(targetId);
+      }
+      // Fade out music when arriving at home
+      if(targetId==='home'){ fadeOutAudio(); }
+    },600);
+  }
+}
+
+// Ambient music
+var archieAudio=null;
+var audioStarted=false;
+
+function initAudio(){
+  if(audioStarted) return;
+  audioStarted=true;
+  archieAudio=document.getElementById('cinAudio');
+  if(!archieAudio) return;
+  archieAudio.volume=0;
+  archieAudio.play().then(function(){
+    var vol=0;
+    var fadeIn=setInterval(function(){
+      vol=Math.min(vol+0.015,0.7);
+      archieAudio.volume=vol;
+      if(vol>=0.7) clearInterval(fadeIn);
+    },80);
+  }).catch(function(e){console.log('Audio needs interaction:',e);});
+}
+
+function fadeOutAudio(){
+  if(!archieAudio) return;
+  // Force pause after 2s regardless
+  var forceStop=setTimeout(function(){
+    try{archieAudio.pause();archieAudio.currentTime=0;}catch(e){}
+  },2000);
+  var fadeOut=setInterval(function(){
+    try{
+      if(archieAudio.volume>0.03){
+        archieAudio.volume=Math.max(0,archieAudio.volume-0.03);
+      } else {
+        archieAudio.volume=0;
+        archieAudio.pause();
+        archieAudio.currentTime=0;
+        clearInterval(fadeOut);
+        clearTimeout(forceStop);
+      }
+    }catch(e){
+      archieAudio.pause();
+      clearInterval(fadeOut);
+      clearTimeout(forceStop);
+    }
+  },80);
+}
+
+function startExperience(){
+  unlockAudio();
+  initAudio();
+  cinNext('sc1');
+}
+
+// Splash fade-in
+setTimeout(function(){
+  var splash=document.getElementById('splash');
+  splash.style.opacity='0';
+  splash.style.transition='opacity 2s ease';
+  setTimeout(function(){splash.style.opacity='1';},50);
+},300);
+</script>
+
+<!-- Background music (place music.mp3 in same folder) -->
+<audio id="cinAudio" loop preload="auto"><source src="music.mp3" type="audio/mpeg"/></audio>
+</body>
+</html>
